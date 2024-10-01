@@ -1,19 +1,66 @@
-def read_fasta(file_path):
-    """
-    Reads a FASTA file and returns a dictionary with sequence headers as keys
-    and sequences as values.
-    
-    :param file_path: Path to the FASTA file.
-    :return: A dictionary with headers and sequences.
-    """
-    fasta_dict = {}
-    header = None
-    sequence = []
+Last login: Tue Oct  1 11:20:11 on ttys000
+(base) admin.dsalih@ITS-dsalih-lt ~ % conda activate dalya_env  
+(dalya_env) admin.dsalih@ITS-dsalih-lt ~ % vim example.fasta
+(dalya_env) admin.dsalih@ITS-dsalih-lt ~ % ls
+Applications				Desktop					Library					Pictures				miniconda3
+BigFix					Documents				Movies					Public
+Creative Cloud Files			Downloads				Music					Salih_Dalya_BME163_Assignment_Week2.py
+(dalya_env) admin.dsalih@ITS-dsalih-lt ~ % cd Desktop 
+(dalya_env) admin.dsalih@ITS-dsalih-lt Desktop % ls
+BME163						Personal					Screenshot 2024-09-06 at 2.02.44 PM.png		Screenshot 2024-09-30 at 12.25.58 PM.png
+CSE101						Screenshot 2024-07-23 at 2.19.27 PM.png		Screenshot 2024-09-06 at 2.03.14 PM.png		Screenshot 2024-09-30 at 12.26.02 PM.png
+CSE182						Screenshot 2024-08-13 at 4.39.27 PM.png		Screenshot 2024-09-19 at 9.27.17 AM.png		advent_calendaR
+Lab						Screenshot 2024-08-26 at 1.45.18 PM.png		Screenshot 2024-09-26 at 3.11.31 PM.png
+(dalya_env) admin.dsalih@ITS-dsalih-lt Desktop % ls
+BME163						Lab						Screenshot 2024-08-26 at 1.45.18 PM.png		Screenshot 2024-09-26 at 3.11.31 PM.png
+BME205						Personal					Screenshot 2024-09-06 at 2.02.44 PM.png		Screenshot 2024-09-30 at 12.25.58 PM.png
+CSE101						Screenshot 2024-07-23 at 2.19.27 PM.png		Screenshot 2024-09-06 at 2.03.14 PM.png		Screenshot 2024-09-30 at 12.26.02 PM.png
+CSE182						Screenshot 2024-08-13 at 4.39.27 PM.png		Screenshot 2024-09-19 at 9.27.17 AM.png		advent_calendaR
+(dalya_env) admin.dsalih@ITS-dsalih-lt Desktop % cd BME205
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim example.fasta                                 
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim orf_finder.py
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
+Processing sequence_1...
+ORFs found and written to orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % ls
+example.fasta	orf_finder.py	orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt 
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less example.fasta  
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % ls
+example.fasta	orf_finder.py	orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % rm orf_finder.py 
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim orf_finder.py
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
+Processing sequence_1...
+ORFs found and written to orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % ls
+example.fasta	orf_finder.py	orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % rm example.fasta 
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim example.fasta
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
+Processing sequence_1...
+ORFs found and written to orfs_output.txt
+Processing sequence_2...
+ORFs found and written to orfs_output.txt
+Processing sequence_3...
+ORFs found and written to orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % rm orf_finder.py 
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim orf_finder.py
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
+Processing sequence_1...
+ORFs found and written to orfs_output.txt
+Processing sequence_2...
+ORFs found and written to orfs_output.txt
+Processing sequence_3...
+ORFs found and written to orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
+(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orf_finder.py 
 
-    with open(file_path, 'r') as file:
-        for line in file:
-            line = line.strip()
-            if line.startswith('>'):
+
+
                 if header:  # Save the previous header and sequence
                     fasta_dict[header] = ''.join(sequence)
                 header = line[1:]  # Remove the '>' from the header
@@ -28,10 +75,10 @@ def read_fasta(file_path):
 def find_orfs(sequence, min_length=20):
     """
     Finds all ORFs in the DNA sequence that are greater than or equal to the
-    specified minimum length.
+    specified minimum length, including overlapping ORFs.
     
     :param sequence: A string representing the DNA sequence.
-    :param min_length: Minimum length for an ORF (default is 20 nucleotides).
+    :param min_length: Minimum length for an ORF in nucleotides (default is 20 nucleotides).
     :return: A list of tuples with (start position, end position, ORF sequence).
     """
     start_codon = 'ATG'
@@ -40,6 +87,7 @@ def find_orfs(sequence, min_length=20):
     orfs = []
     seq_len = len(sequence)
     
+    # Search for all start codons and then find the first stop codon after each start
     for i in range(seq_len - 2):
         codon = sequence[i:i+3]
         if codon == start_codon:  # Found a start codon
@@ -49,8 +97,7 @@ def find_orfs(sequence, min_length=20):
                     orf = sequence[i:j+3]  # Include the stop codon
                     if len(orf) >= min_length:
                         orfs.append((i, j + 3, orf))
-                    break  # Break once the first stop codon is found
-    
+                    # Do not break here; continue searching for other stop codons in case of overlapping ORFs
     return orfs
 
 def write_orfs_to_file(orfs, output_file):
@@ -68,7 +115,7 @@ def write_orfs_to_file(orfs, output_file):
 # Example usage:
 fasta_file = 'example.fasta'
 output_file = 'orfs_output.txt'
-min_orf_length = 20  # Minimum ORF length to consider
+min_orf_length = 20  # Minimum ORF length to consider (in nucleotides)
 
 # Reading the FASTA file
 sequences = read_fasta(fasta_file)
@@ -83,3 +130,4 @@ for header, sequence in sequences.items():
         print(f"ORFs found and written to {output_file}")
     else:
         print("No ORFs found.")
+        
