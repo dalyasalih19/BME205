@@ -1,66 +1,19 @@
-Last login: Tue Oct  1 11:20:11 on ttys000
-(base) admin.dsalih@ITS-dsalih-lt ~ % conda activate dalya_env  
-(dalya_env) admin.dsalih@ITS-dsalih-lt ~ % vim example.fasta
-(dalya_env) admin.dsalih@ITS-dsalih-lt ~ % ls
-Applications				Desktop					Library					Pictures				miniconda3
-BigFix					Documents				Movies					Public
-Creative Cloud Files			Downloads				Music					Salih_Dalya_BME163_Assignment_Week2.py
-(dalya_env) admin.dsalih@ITS-dsalih-lt ~ % cd Desktop 
-(dalya_env) admin.dsalih@ITS-dsalih-lt Desktop % ls
-BME163						Personal					Screenshot 2024-09-06 at 2.02.44 PM.png		Screenshot 2024-09-30 at 12.25.58 PM.png
-CSE101						Screenshot 2024-07-23 at 2.19.27 PM.png		Screenshot 2024-09-06 at 2.03.14 PM.png		Screenshot 2024-09-30 at 12.26.02 PM.png
-CSE182						Screenshot 2024-08-13 at 4.39.27 PM.png		Screenshot 2024-09-19 at 9.27.17 AM.png		advent_calendaR
-Lab						Screenshot 2024-08-26 at 1.45.18 PM.png		Screenshot 2024-09-26 at 3.11.31 PM.png
-(dalya_env) admin.dsalih@ITS-dsalih-lt Desktop % ls
-BME163						Lab						Screenshot 2024-08-26 at 1.45.18 PM.png		Screenshot 2024-09-26 at 3.11.31 PM.png
-BME205						Personal					Screenshot 2024-09-06 at 2.02.44 PM.png		Screenshot 2024-09-30 at 12.25.58 PM.png
-CSE101						Screenshot 2024-07-23 at 2.19.27 PM.png		Screenshot 2024-09-06 at 2.03.14 PM.png		Screenshot 2024-09-30 at 12.26.02 PM.png
-CSE182						Screenshot 2024-08-13 at 4.39.27 PM.png		Screenshot 2024-09-19 at 9.27.17 AM.png		advent_calendaR
-(dalya_env) admin.dsalih@ITS-dsalih-lt Desktop % cd BME205
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim example.fasta                                 
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim orf_finder.py
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
-Processing sequence_1...
-ORFs found and written to orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % ls
-example.fasta	orf_finder.py	orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt 
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less example.fasta  
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % ls
-example.fasta	orf_finder.py	orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % rm orf_finder.py 
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim orf_finder.py
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
-Processing sequence_1...
-ORFs found and written to orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % ls
-example.fasta	orf_finder.py	orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % rm example.fasta 
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim example.fasta
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
-Processing sequence_1...
-ORFs found and written to orfs_output.txt
-Processing sequence_2...
-ORFs found and written to orfs_output.txt
-Processing sequence_3...
-ORFs found and written to orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % rm orf_finder.py 
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % vim orf_finder.py
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % python orf_finder.py
-Processing sequence_1...
-ORFs found and written to orfs_output.txt
-Processing sequence_2...
-ORFs found and written to orfs_output.txt
-Processing sequence_3...
-ORFs found and written to orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orfs_output.txt
-(dalya_env) admin.dsalih@ITS-dsalih-lt BME205 % less orf_finder.py 
+def read_fasta(file_path):
+    """
+    Reads a FASTA file and returns a dictionary with sequence headers as keys
+    and sequences as values.
+    
+    :param file_path: Path to the FASTA file.
+    :return: A dictionary with headers and sequences.
+    """
+    fasta_dict = {}
+    header = None
+    sequence = []
 
-
-
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith('>'):
                 if header:  # Save the previous header and sequence
                     fasta_dict[header] = ''.join(sequence)
                 header = line[1:]  # Remove the '>' from the header
