@@ -14,33 +14,38 @@ def normalize_expression(data):
 
 def read_and_normalize(directory):
     """
-    Read and normalize gene expression data from all CSV files in a given directory using base Python.
-    Each CSV file contains expression data for all genes, and each replicate is processed.
+    Read and normalize gene expression data from all CSV files in a given directory.
+    Each file contains gene expression values for 10 genes.
     :param directory: Path to the directory containing CSV files.
-    :return: Numpy array where each row represents normalized gene expression for each gene.
+    :return: Numpy array where each row represents normalized gene expression values for one replicate (10 genes per file).
     """
     all_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.csv')]
     
     if len(all_files) == 0:
         raise FileNotFoundError(f"No CSV files found in directory {directory}.")
-    
-    gene_expression_data = []
-    
+
+    all_gene_data = []
+
     # Read and normalize each file
     for file in all_files:
         with open(file, mode='r') as infile:
             reader = csv.reader(infile)
-            next(reader)  # Skip header if necessary
+            next(reader)  # Skip the header
+
+            gene_expression = []
             for row in reader:  # Process each gene in the file
-                data = list(map(float, row[1:]))  # Convert gene expression values to float
-                normalized = normalize_expression(data)
-                gene_expression_data.append(normalized)
-    
-    return np.array(gene_expression_data)
+                gene_expression.append(float(row[1]))  # Extract the gene expression value
+            
+            # Normalize the expression data for all 10 genes in this file
+            normalized = normalize_expression(gene_expression)
+            all_gene_data.append(normalized)  # Append the normalized values for this replicate
+
+    # Convert the list of lists to a numpy array
+    return np.array(all_gene_data)
 
 def compute_statistics(data):
     """
-    Compute the mean and median normalized expression for each gene.
+    Compute the mean and median normalized expression for each gene across all replicates.
     :param data: Numpy array with normalized gene expression for all replicates.
     :return: Tuple of mean and median arrays for each gene.
     """
@@ -60,7 +65,7 @@ def calculate_log2_fold_change(mean_control, mean_treatment):
 def main():
     # Get the control and treatment directories from command-line arguments
     if len(sys.argv) != 3:
-        print("Usage: python Dalya_Salih_Tier1.py <control_directory> <treatment_directory>")
+        print("Usage: python Firstname_Lastname_Tier1.py <control_directory> <treatment_directory>")
         sys.exit(1)
 
     control_directory = sys.argv[1]
@@ -82,7 +87,7 @@ def main():
     log2_fold_change = calculate_log2_fold_change(mean_control, mean_treatment)
 
     # Output results
-    output_file = 'gene_expression_log2_fold_change.tsv'
+    output_file = 'output_Tier1.txt'
     with open(output_file, 'w') as outfile:
         outfile.write("#gene\tmean_control\tmedian_control\tmean_treatment\tmedian_treatment\tlog2_fold_change\n")
         for i, (mc, med_c, mt, med_t, fc) in enumerate(zip(mean_control, median_control, mean_treatment, median_treatment, log2_fold_change)):
@@ -92,4 +97,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
