@@ -15,8 +15,9 @@ def normalize_expression(data):
 def read_and_normalize(directory):
     """
     Read and normalize gene expression data from all CSV files in a given directory using base Python.
+    Each CSV file contains expression data for all genes, and each replicate is processed.
     :param directory: Path to the directory containing CSV files.
-    :return: Numpy array where each row represents normalized gene expression for a replicate.
+    :return: Numpy array where each row represents normalized gene expression for each gene.
     """
     all_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.csv')]
     
@@ -30,10 +31,9 @@ def read_and_normalize(directory):
         with open(file, mode='r') as infile:
             reader = csv.reader(infile)
             next(reader)  # Skip header if necessary
-            # Collect expression values, convert to float
-            data = [list(map(float, row[1:])) for row in reader]  # Expects gene values in columns starting from index 1
-            for replicate_data in data:
-                normalized = normalize_expression(replicate_data)
+            for row in reader:  # Process each gene in the file
+                data = list(map(float, row[1:]))  # Convert gene expression values to float
+                normalized = normalize_expression(data)
                 gene_expression_data.append(normalized)
     
     return np.array(gene_expression_data)
