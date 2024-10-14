@@ -1,6 +1,62 @@
 import sys
 import numpy as np
 
+# Interval Tree Node
+class IntervalTreeNode:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+        self.left = None
+        self.right = None
+        self.max_end = end
+
+# Interval Tree Class
+class IntervalTree:
+    def __init__(self, intervals):
+        self.root = self.build_tree(intervals)
+
+    def build_tree(self, intervals):
+        if not intervals:
+            return None
+        
+        # Sort intervals by start point
+        intervals.sort(key=lambda x: x[0])
+        mid = len(intervals) // 2
+        
+        # Create the root node from the middle of the list
+        root = IntervalTreeNode(intervals[mid][0], intervals[mid][1])
+        
+        # Recursively build the left and right subtrees
+        root.left = self.build_tree(intervals[:mid])
+        root.right = self.build_tree(intervals[mid + 1:])
+        
+        # Update max_end to the maximum end value of the node and its children
+        root.max_end = max(root.end, 
+                           root.left.max_end if root.left else float('-inf'), 
+                           root.right.max_end if root.right else float('-inf'))
+        
+        return root
+
+    def query(self, node, start, end):
+        if node is None:
+            return []
+        
+        result = []
+        
+        # Check if the current interval overlaps with the query interval
+        if node.start <= end and start <= node.end:
+            result.append((node.start, node.end))
+        
+        # Recurse into the left subtree if it might contain overlapping intervals
+        if node.left and node.left.max_end >= start:
+            result.extend(self.query(node.left, start, end))
+        
+        # Recurse into the right subtree
+        result.extend(self.query(node.right, start, end))
+        
+        return result
+
+# Load BED file
 def load_bed_file(file_path):
     ranges = []
     with open(file_path, 'r') as f:
@@ -12,6 +68,7 @@ def load_bed_file(file_path):
             ranges.append((chromosome, start, end))
     return ranges
 
+# Load genome index
 def load_genome_index(file_path):
     chromosome_lengths = {}
     with open(file_path, 'r') as f:
@@ -22,6 +79,7 @@ def load_genome_index(file_path):
             chromosome_lengths[chromosome] = length
     return chromosome_lengths
 
+# Merge ranges
 def merge_ranges(ranges):
     merged = []
     ranges.sort(key=lambda x: (x[0], x[1]))
@@ -38,102 +96,78 @@ def merge_ranges(ranges):
     merged.append((current_chr, current_start, current_end))
     return merged
 
-def calculate_overlap(merged_a, merged_b):
-    overlap = 0
-    i, j = 0, 0
+# Calculate overlap using the interval tree
+def calculate_overlap_with_tree(merged_a, merged_b):
+    total_overlap = 0
+    chr_to_intervals = {}
     
-    while i < len(merged_a) and j < len(merged_b):
-        chr_a, start_a, end_a = merged_a[i]
-        chr_b, start_b, end_b = merged_b[j]
-        
-        if chr_a == chr_b:
-            if end_a <= start_b:
-                i += 1
-            elif end_b <= start_a:
-                j += 1
-            else:
+    # Build interval trees for each chromosome
+    for chr_, start, end in merged_a:
+        if chr_ not in chr_to_intervals:
+            chr_to_intervals[chr_] = []
+        chr_to_intervals[chr_].append((start, end))
+    
+    trees = {chr_: IntervalTree(intervals) for chr_, intervals in chr_to_intervals.items()}
+    
+    # Query the tree for overlaps with Set B
+    for chr_, start_b, end_b in merged_b:
+        if chr_ in trees:
+            overlaps = trees[chr_].query(trees[chr_].root, start_b, end_b)
+            for start_a, end_a in overlaps:
                 overlap_start = max(start_a, start_b)
                 overlap_end = min(end_a, end_b)
-                overlap += max(0, overlap_end - overlap_start)
-                
-                if end_a < end_b:
-                    i += 1
-                else:
-                    j += 1
-        elif chr_a < chr_b:
-            i += 1
-        else:
-            j += 1
+                total_overlap += max(0, overlap_end - overlap_start)
     
-    return overlap
+    return total_overlap
 
-def permute_ranges(ranges, genome_index):
-    permuted = []
+# Shift ranges for permutation
+def shift_ranges(ranges, genome_index):
+    shifted = []
     for chr_, start, end in ranges:
         chr_length = genome_index[chr_]
         range_size = end - start
-        new_start = np.random.randint(0, chr_length - range_size)
-        new_end = new_start + range_size
-        permuted.append((chr_, new_start, new_end))
-    return merge_ranges(permuted)
+        max_shift = chr_length - range_size
+        shift = np.random.randint(0, max_shift)
+        shifted.append((chr_, shift, shift + range_size))
+    return merge_ranges(shifted)
 
+# Permutation test using the interval tree
 def permutation_test(merged_a, merged_b, genome_index, n_permutations=10000):
     permuted_overlaps = []
     
     for _ in range(n_permutations):
-        permuted_b = permute_ranges(merged_b, genome_index)
-        perm_overlap = calculate_overlap(merged_a, permuted_b)
+        permuted_b = shift_ranges(merged_b, genome_index)
+        perm_overlap = calculate_overlap_with_tree(merged_a, permuted_b)
         permuted_overlaps.append(perm_overlap)
     
     return permuted_overlaps
 
 def main():
-    # Parse command line arguments
     if len(sys.argv) < 4:
-        print("Usage: python Dalya_Lastname_Tier1.py <path_to_SetA.bed> <path_to_SetB.bed> <path_to_genome.fa.fai> [n_permutations]")
+        print("Usage: python Dalya_Salih_Tier1.py <path_to_SetA.bed> <path_to_SetB.bed> <path_to_genome.fa.fai> [n_permutations]")
         sys.exit(1)
     
     set_a_path = sys.argv[1]
     set_b_path = sys.argv[2]
     genome_fai_path = sys.argv[3]
     
-    # Optional number of permutations
     n_permutations = int(sys.argv[4]) if len(sys.argv) > 4 else 10000
     
-    # Load files
     set_a = load_bed_file(set_a_path)
     set_b = load_bed_file(set_b_path)
     genome_index = load_genome_index(genome_fai_path)
     
-    # Merge the ranges in Set A and Set B
     merged_a = merge_ranges(set_a)
     merged_b = merge_ranges(set_b)
     
-    # Debug: Print the merged ranges
-    print("Merged Set A:", merged_a[:10])  # Show first 10 merged ranges
-    print("Merged Set B:", merged_b[:10])  # Show first 10 merged ranges
+    observed_overlap = calculate_overlap_with_tree(merged_a, merged_b)
     
-    # Calculate the observed overlap
-    observed_overlap = calculate_overlap(merged_a, merged_b)
-    
-    # Debug: Print the observed overlap
-    print(f"Observed overlap: {observed_overlap} bases")
-    
-    # Run permutation test
     permuted_overlaps = permutation_test(merged_a, merged_b, genome_index, n_permutations)
     
-    # Debug: Print some permuted overlaps
-    print(f"Sample of permuted overlaps: {permuted_overlaps[:10]}")
-    
-    # Calculate p-value
     p_value = np.sum(np.array(permuted_overlaps) >= observed_overlap) / n_permutations
     
-    # Debug: Print a sample of permuted ranges for checking
-    sample_permuted_b = permute_ranges(merged_b, genome_index)[:10]
-    print(f"Sample of permuted ranges: {sample_permuted_b}")
-    
-    # Print the result in the required format
     print(f"Number of overlapping bases observed: {observed_overlap}, p value: {p_value:.4f}")
 
 if __name__ == "__main__":
     main()
+
