@@ -120,21 +120,11 @@ def main():
     merged_a = merge_ranges_v2(set_a)
     merged_b = merge_ranges_v2(set_b)
     
-    # Debug: Print the merged ranges for inspection
-    print("Merged Set A:", merged_a[:10])  # First 10 merged ranges
-    print("Merged Set B:", merged_b[:10])  # First 10 merged ranges
-    
     # Calculate the observed overlap
     observed_overlap = calculate_overlap_sweep_v2(merged_a, merged_b)
     
-    # Debug: Print the observed overlap
-    print(f"Observed overlap: {observed_overlap} bases")
-    
     # Run permutation test
     permuted_overlaps = permutation_test(merged_a, merged_b, genome_index, n_permutations)
-    
-    # Debug: Print a sample of permuted overlaps
-    print(f"Sample of permuted overlaps: {permuted_overlaps[:10]}")
     
     # Calculate p-value
     p_value = np.sum(np.array(permuted_overlaps) >= observed_overlap) / n_permutations
@@ -144,4 +134,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
