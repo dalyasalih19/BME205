@@ -28,8 +28,9 @@ def visualize_centroids(centroids, k, filename):
         # Reshape each centroid back into a 28x28 image and display it
         ax.imshow(centroid.reshape(28, 28), cmap='gray')
         ax.axis('off')  # Turn off the axes for cleaner visualization
+        ax.set_title(f'Centroid {i + 1}')  # Add title for each individual centroid
 
-    plt.suptitle(f'Centroids for K={k}')  # Add a title with the current value of K
+    plt.suptitle(f'Centroids for K={k}')  # Add a title with the current value of K at the top
     plt.savefig(filename)  # Save the plot to a file
     plt.show()  # Display the plot
 
