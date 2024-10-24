@@ -14,10 +14,12 @@ plt.title(f"Label: {MNIST_y[0]}")  # Add the corresponding label as the title
 plt.show()  # Show the plot
 
 # Function to visualize and save the centroids as images
-# Always use 1 row, and columns equal to K
 def visualize_centroids(centroids, k, filename):
-    rows = 1  # Always set the number of rows to 1
-    cols = k  # Set the number of columns equal to K (the number of clusters)
+    rows = 1  
+    cols = k  #  # of columns equal to number of clusters
+    
+    # Set figure size to 12 inches wide and 4 inches tall
+    plt.figure(figsize=(12, 4)) 
     
     for i, centroid in enumerate(centroids):
         # Create a subplot for each centroid (i+1 to avoid indexing from 0)
@@ -45,8 +47,6 @@ centroids_k11 = kmeans_k11.cluster_centers_  # Get the centroids of the clusters
 visualize_centroids(centroids_k11, 11, 'centroids_k11.png')
 
 # Function to calculate clustering error
-# - kmeans: the fitted KMeans model
-# - labels: the true labels for the dataset
 def clustering_error(kmeans, labels):
     error = 0  # Initialize the total error counter
     for i in range(kmeans.n_clusters):  # Loop over each cluster
@@ -69,3 +69,4 @@ print(f"K=10 Error={error_k10}")
 error_k11 = clustering_error(kmeans_k11, MNIST_y)
 # Print the error for K=11 in the required format
 print(f"K=11 Error={error_k11}")
+
