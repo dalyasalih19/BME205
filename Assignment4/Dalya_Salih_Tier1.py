@@ -14,7 +14,11 @@ plt.title(f"Label: {MNIST_y[0]}")  # Add the corresponding label as the title
 plt.show()  # Show the plot
 
 # Function to visualize and save the centroids as images
-def visualize_centroids(centroids, k, filename, rows, cols):
+# Always use 1 row, and columns equal to K
+def visualize_centroids(centroids, k, filename):
+    rows = 1  # Always set the number of rows to 1
+    cols = k  # Set the number of columns equal to K (the number of clusters)
+    
     for i, centroid in enumerate(centroids):
         # Create a subplot for each centroid (i+1 to avoid indexing from 0)
         plt.subplot(rows, cols, i + 1)
@@ -29,16 +33,16 @@ def visualize_centroids(centroids, k, filename, rows, cols):
 kmeans_k10 = KMeans(n_clusters=10, random_state=0)
 kmeans_k10.fit(MNIST_X)  # Fit the model to the dataset (this performs the clustering)
 centroids_k10 = kmeans_k10.cluster_centers_  # Get the centroids of the clusters
-# Visualize the centroids for K=10 in a 2x5 grid and save the image as 'centroids_k10.png'
-visualize_centroids(centroids_k10, 10, 'centroids_k10.png', 2, 5)
+# Visualize the centroids for K=10 in a 1x10 grid and save the image as 'centroids_k10.png'
+visualize_centroids(centroids_k10, 10, 'centroids_k10.png')
 
 # Perform K-Means clustering with K=11
 # Here we try to partition the dataset into 11 clusters, an additional cluster compared to K=10
 kmeans_k11 = KMeans(n_clusters=11, random_state=0)
 kmeans_k11.fit(MNIST_X)  # Fit the model to the dataset
 centroids_k11 = kmeans_k11.cluster_centers_  # Get the centroids of the clusters
-# Visualize the centroids for K=11 in a 3x4 grid and save the image as 'centroids_k11.png'
-visualize_centroids(centroids_k11, 11, 'centroids_k11.png', 3, 4)
+# Visualize the centroids for K=11 in a 1x11 grid and save the image as 'centroids_k11.png'
+visualize_centroids(centroids_k11, 11, 'centroids_k11.png')
 
 # Function to calculate clustering error
 # - kmeans: the fitted KMeans model
