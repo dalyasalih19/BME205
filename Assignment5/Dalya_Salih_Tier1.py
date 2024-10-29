@@ -74,6 +74,10 @@ dogs_data = np.load("dogs_X.npy", allow_pickle=True)
 dogs_clades = np.load("dogs_clades.npy", allow_pickle=True)
 print("Dogs SNP dataset loaded.")
 
+# Convert categorical clades to numerical labels
+print("Converting clade labels to numerical values for plotting...")
+unique_clades, clade_indices = np.unique(dogs_clades, return_inverse=True)
+
 # 2. Apply PCA to reduce dimensions to 2
 print("Applying PCA on Dogs SNP dataset...")
 pca_dogs = PCA(n_components=2, random_state=RANDOM_STATE)
@@ -83,7 +87,7 @@ print("PCA on Dogs SNP dataset completed.")
 # 3. Visualize the 2D PCA-transformed data for Dogs SNP
 print("Visualizing and saving 2D PCA-transformed Dogs SNP data...")
 plt.figure(figsize=(8, 6))
-scatter = plt.scatter(dogs_data_2d[:, 0], dogs_data_2d[:, 1], c=dogs_clades, cmap='tab10', alpha=0.5)
+scatter = plt.scatter(dogs_data_2d[:, 0], dogs_data_2d[:, 1], c=clade_indices, cmap='tab10', alpha=0.5)
 plt.colorbar(scatter, label='Clade Label')
 plt.title('Dogs SNP PCA (2D)')
 plt.xlabel('Principal Component 1')
