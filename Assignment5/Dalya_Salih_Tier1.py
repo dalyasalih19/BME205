@@ -101,10 +101,10 @@ print("Dogs 2D PCA plot saved as Dogs_PCA_2D.png.")
 
 # 1. Load the molecular distance matrix and atom types
 print("Loading molecular distance matrix...")
-molecule_distances = pd.read_csv("molecule_distances.tsv", sep='\t', header=0)  # Load with header
+molecule_distances = pd.read_csv("molecule_distances.tsv", sep='\t')  
 
 # Remove the first column (labels) to get a square matrix
-distance_matrix = molecule_distances.iloc[:, 1:].values
+distance_matrix = molecule_distances.iloc[:, 2:].values
 print(f"Molecular distance matrix loaded with shape {distance_matrix.shape}.")
 
 # 2. Perform MDS to reconstruct 3D coordinates
