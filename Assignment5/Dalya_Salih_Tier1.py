@@ -101,7 +101,7 @@ print("Dogs 2D PCA plot saved as Dogs_PCA_2D.png.")
 
 # 1. Load the molecular distance matrix and atom types
 print("Loading molecular distance matrix...")
-molecule_distances = pd.read_csv("molecule_distances.tsv", sep='\t')
+molecule_distances = pd.read_csv("molecule_distances.tsv", sep='\t', header=0)  # Load with header
 
 # Remove the first column (labels) to get a square matrix
 distance_matrix = molecule_distances.iloc[:, 1:].values
