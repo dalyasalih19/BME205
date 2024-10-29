@@ -102,17 +102,22 @@ print("Dogs 2D PCA plot saved as Dogs_PCA_2D.png.")
 # 1. Load the molecular distance matrix and atom types
 print("Loading molecular distance matrix...")
 molecule_distances = pd.read_csv("molecule_distances.tsv", sep='\t')
-distance_matrix = molecule_distances.iloc[:, 1:].values  # Distance matrix excluding atom label column
-print("Molecular distance matrix loaded.")
+
+# Remove the first column (labels) to get a square matrix
+distance_matrix = molecule_distances.iloc[:, 1:].values
+print(f"Molecular distance matrix loaded with shape {distance_matrix.shape}.")
 
 # 2. Perform MDS to reconstruct 3D coordinates
-print("Applying MDS to reconstruct 3D coordinates...")
-mds = MDS(n_components=3, dissimilarity='precomputed', random_state=RANDOM_STATE)
-molecule_coords = mds.fit_transform(distance_matrix)
-print("MDS on molecular distance matrix completed.")
-
-# 3. Output the coordinates to a CSV file
-print("Saving reconstructed 3D coordinates to CSV...")
-molecule_coords_df = pd.DataFrame(molecule_coords, columns=['X', 'Y', 'Z'])
-molecule_coords_df.to_csv("molecule_coordinates.csv", index=False)
-print("3D coordinates saved as molecule_coordinates.csv.")
+if distance_matrix.shape[0] == distance_matrix.shape[1]:  # Ensure the matrix is square
+    print("Applying MDS to reconstruct 3D coordinates...")
+    mds = MDS(n_components=3, dissimilarity='precomputed', random_state=RANDOM_STATE)
+    molecule_coords = mds.fit_transform(distance_matrix)
+    print("MDS on molecular distance matrix completed.")
+    
+    # 3. Output the coordinates to a CSV file
+    print("Saving reconstructed 3D coordinates to CSV...")
+    molecule_coords_df = pd.DataFrame(molecule_coords, columns=['X', 'Y', 'Z'])
+    molecule_coords_df.to_csv("molecule_coordinates.csv", index=False)
+    print("3D coordinates saved as molecule_coordinates.csv.")
+else:
+    print("Error: Distance matrix is not square. Please check the input file structure.")
