@@ -1,4 +1,4 @@
-# Firstname_Lastname_Tier1.py
+# Dalya_Salih_Tier1.py
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
