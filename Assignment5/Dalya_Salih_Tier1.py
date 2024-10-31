@@ -117,7 +117,7 @@ if distance_matrix.shape[0] == distance_matrix.shape[1]:  # Ensure the matrix is
     # 3. Output the coordinates to a CSV file
     print("Saving reconstructed 3D coordinates to CSV...")
     molecule_coords_df = pd.DataFrame(molecule_coords, columns=['X', 'Y', 'Z'])
-    molecule_coords_df.to_csv("molecule_coordinates.csv", index=False)
+    molecule_coords_df.to_csv("molecule_coordinates.txt", sep='\t', index=False)
     print("3D coordinates saved as molecule_coordinates.csv.")
 else:
     print("Error: Distance matrix is not square. Please check the input file structure.")
