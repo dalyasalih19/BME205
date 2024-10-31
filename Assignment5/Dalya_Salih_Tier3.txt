@@ -1,0 +1,17 @@
+Molecule Identification for Tier 3
+
+Molecule Name: [Molecule Name]
+
+Chemical Structure:
+The molecule contains [describe atoms and bonding]. Based on the atomic configuration and distances, it resembles [known molecule].
+
+Properties:
+- Chemical formula: [Formula]
+- Molecular weight: [Weight]
+- Common uses or significance: [Uses, significance]
+
+Tree Association:
+This molecule can commonly be found in [tree type] due to its natural occurrence in [related biological process or source].
+
+Location on Campus:
+The [tree type] is located in [campus location, if known]. 
