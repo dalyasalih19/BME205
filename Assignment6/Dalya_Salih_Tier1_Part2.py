@@ -7,7 +7,7 @@ import sys
 def apply_nmf(dog_X_path, dog_clades_path):
     # Load dataset
     dogs_X = np.load(dog_X_path)
-    dog_clades = np.load(dog_clades_path)
+    dog_clades = np.load(dog_clades_path, allow_pickle=True)
 
     # Apply NMF with specified parameters
     model = NMF(n_components=5, init='random', random_state=42)
@@ -45,3 +45,4 @@ if __name__ == "__main__":
     dog_X_path = sys.argv[1]
     dog_clades_path = sys.argv[2]
     apply_nmf(dog_X_path, dog_clades_path)
+
