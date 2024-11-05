@@ -28,25 +28,33 @@ import numpy as np
 import sys
 
 def fibonacci_nth_term(a, b, n):
-    # Define the golden ratio and its conjugate
-    phi = (1 + np.sqrt(5)) / 2
-    psi = (1 - np.sqrt(5)) / 2
+    # Define the golden ratio components
+    sqrt_five = np.sqrt(5)
+    alpha = (1 + sqrt_five) / 2
+    beta = (1 - sqrt_five) / 2
 
-    # Use Binet's formula to get the standard Fibonacci term, F(n)
-    F_n = (phi**(n-1) - psi**(n-1)) / np.sqrt(5)
-
-    # Adjust to match the custom starting values by scaling
+    # Use Binet's formula to calculate the n-th Fibonacci term
+    # The formula assumes the standard Fibonacci sequence starting at F(1) = 1 and F(2) = 1
+    # We calculate F(n-2) + F(n-1) for terms beyond the first two
     if n == 1:
         return a
     elif n == 2:
         return b
     else:
-        # Scaling the standard term to fit the custom sequence
-        return round(F_n * (b / a))
+        # Calculate the first two terms based on standard Fibonacci values
+        F1 = a
+        F2 = b
+        # Compute the n-th term using Binet's formula adjusted for starting values
+        Fn = np.rint(((alpha ** (n-1)) - (beta ** (n-1))) / sqrt_five).astype(int)
+        # Scale Fn to match the custom starting sequence
+        return round(F1 + (Fn - 1) * (F2 / F1))
 
 if __name__ == "__main__":
+    # Input parameters
     a = int(sys.argv[1])
     b = int(sys.argv[2])
     n = int(sys.argv[3])
 
+    # Output the n-th term
     print(fibonacci_nth_term(a, b, n))
+
