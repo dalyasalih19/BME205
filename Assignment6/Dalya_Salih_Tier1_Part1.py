@@ -24,8 +24,8 @@ def fibonacci_custom_sequence(a, b, n):
     # Convert to integers for readability
     Fn_custom = Fn_custom.astype(int)
     
-    # Output the n-th term
-    return Fn_custom
+    # Return the n-th term
+    return Fn_custom[-1]
 
 if __name__ == "__main__":
     # Command-line arguments for custom starting values and the desired term count
@@ -33,11 +33,7 @@ if __name__ == "__main__":
     start_b = int(sys.argv[2])
     fNumber = int(sys.argv[3])
 
-    # Calculate the custom sequence
-    fibonacci_sequence = fibonacci_custom_sequence(start_a, start_b, fNumber)
-
-    # Output the sequence and the n-th term
-    print("The first {} numbers of the Fibonacci series with custom starting values are: {}.".format(fNumber, fibonacci_sequence))
-    print({fibonacci_sequence[-1]})
+    # Output only the n-th term of the sequence
+    print(fibonacci_custom_sequence(start_a, start_b, fNumber))
 
 
