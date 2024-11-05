@@ -32,11 +32,17 @@ def fibonacci_nth_term(a, b, n):
     phi = (1 + np.sqrt(5)) / 2
     psi = (1 - np.sqrt(5)) / 2
 
-    # Calculate the n-th term using the closed-form formula
-    term_n = (a * phi**(n-1) - b * psi**(n-1)) / np.sqrt(5)
-    
-    # Round the result to handle any floating-point precision issues
-    return round(term_n)
+    # Use Binet's formula to get the standard Fibonacci term, F(n)
+    F_n = (phi**(n-1) - psi**(n-1)) / np.sqrt(5)
+
+    # Adjust to match the custom starting values by scaling
+    if n == 1:
+        return a
+    elif n == 2:
+        return b
+    else:
+        # Scaling the standard term to fit the custom sequence
+        return round(F_n * (b / a))
 
 if __name__ == "__main__":
     a = int(sys.argv[1])
@@ -44,5 +50,3 @@ if __name__ == "__main__":
     n = int(sys.argv[3])
 
     print(fibonacci_nth_term(a, b, n))
-
-
