@@ -9,7 +9,7 @@ def apply_nmf(dog_X_path, dog_clades_path):
     dog_clades = np.load(dog_clades_path, allow_pickle=True)
 
     # Apply NMF with specified parameters
-    model = NMF(n_components=5, init='random', random_state=42)
+    model = NMF(n_components=5, init='random', random_state=42, max_iter=500)
     W = model.fit_transform(dogs_X)
     H = model.components_
 
@@ -34,17 +34,18 @@ def apply_nmf(dog_X_path, dog_clades_path):
     plt.savefig("NMF_Dogs.png")
     plt.close()
 
-    # Identify the dominant component for all Basenji samples
-    basenji_indices = np.where(dog_clades == "Basenji")[0]
+    # Identify the dominant component for all Basenji samples (case-insensitive, removing prefixes)
+    basenji_indices = np.where([str(clade).lstrip("*").strip().lower() == "basenji" for clade in dog_clades])[0]
     if basenji_indices.size > 0:
         basenji_dominant_clusters = dominant_clusters[basenji_indices]
         basenji_dominant = np.bincount(basenji_dominant_clusters).argmax()
-        print(basenji_dominant + 1)  # Print the dominant component for Basenji samples
-    else:
-        print("No Basenji samples found.")
+        #print(basenji_dominant + 1)  # Print the dominant cluster for Basenji samples
+    #else:
+        #print("No Basenji samples found.")
 
 if __name__ == "__main__":
     # Ensure we get file paths from command-line arguments
     dog_X_path = sys.argv[1]
     dog_clades_path = sys.argv[2]
     apply_nmf(dog_X_path, dog_clades_path)
+
