@@ -1,60 +1,43 @@
-# import numpy as np
-# import sys
-
-# def fibonacci_nth_term(a, b, n):
-#     # Define the transformation matrix for Fibonacci sequence
-#     matrix = np.array([[1, 1], [1, 0]])
-    
-#     # Find eigenvalues and eigenvectors
-#     eigenvalues, eigenvectors = np.linalg.eig(matrix)
-    
-#     # Use the eigenvalues and eigenvectors to derive the explicit formula for Fibonacci-like sequences
-#     phi = (1 + np.sqrt(5)) / 2
-#     psi = (1 - np.sqrt(5)) / 2
-
-#     # Calculate the n-th term using the closed-form formula with eigenvalues
-#     term_n = (a * (phi**(n - 1)) - b * (psi**(n - 1))) / np.sqrt(5)
-#     return round(term_n)
-
-# if __name__ == "__main__":
-#     a = int(sys.argv[1])
-#     b = int(sys.argv[2])
-#     n = int(sys.argv[3])
-
-#     print(fibonacci_nth_term(a, b, n))
-
-
 import numpy as np
 import sys
 
-def fibonacci_nth_term(a, b, n):
-    # Define the golden ratio components
-    sqrt_five = np.sqrt(5)
+def fibonacci_custom_sequence(a, b, n):
+    # Generate the indices for Fibonacci terms
+    indices = np.arange(1, n + 1)
+    length_indices = len(indices)
+
+    # Constants for Binet's formula
+    sqrt_five = np.sqrt(5) 
     alpha = (1 + sqrt_five) / 2
     beta = (1 - sqrt_five) / 2
 
-    # Use Binet's formula to calculate the n-th Fibonacci term
-    # The formula assumes the standard Fibonacci sequence starting at F(1) = 1 and F(2) = 1
-    # We calculate F(n-2) + F(n-1) for terms beyond the first two
-    if n == 1:
-        return a
-    elif n == 2:
-        return b
-    else:
-        # Calculate the first two terms based on standard Fibonacci values
-        F1 = a
-        F2 = b
-        # Compute the n-th term using Binet's formula adjusted for starting values
-        Fn = np.rint(((alpha ** (n-1)) - (beta ** (n-1))) / sqrt_five).astype(int)
-        # Scale Fn to match the custom starting sequence
-        return round(F1 + (Fn - 1) * (F2 / F1))
+    # Calculate the standard Fibonacci sequence terms using Binet's formula
+    Fn_standard = np.rint(((alpha ** indices) - (beta ** indices)) / sqrt_five)
+
+    # Adjust the terms based on custom starting values
+    Fn_custom = np.empty(length_indices)
+    Fn_custom[0] = a
+    Fn_custom[1] = b
+    for i in range(2, length_indices):
+        Fn_custom[i] = Fn_standard[i - 1] * (b / Fn_standard[1]) + Fn_standard[i - 2] * (a / Fn_standard[0])
+
+    # Convert to integers for readability
+    Fn_custom = Fn_custom.astype(int)
+    
+    # Output the n-th term
+    return Fn_custom
 
 if __name__ == "__main__":
-    # Input parameters
-    a = int(sys.argv[1])
-    b = int(sys.argv[2])
-    n = int(sys.argv[3])
+    # Command-line arguments for custom starting values and the desired term count
+    start_a = int(sys.argv[1])
+    start_b = int(sys.argv[2])
+    fNumber = int(sys.argv[3])
 
-    # Output the n-th term
-    print(fibonacci_nth_term(a, b, n))
+    # Calculate the custom sequence
+    fibonacci_sequence = fibonacci_custom_sequence(start_a, start_b, fNumber)
+
+    # Output the sequence and the n-th term
+    print("The first {} numbers of the Fibonacci series with custom starting values are: {}.".format(fNumber, fibonacci_sequence))
+    print({fibonacci_sequence[-1]})
+
 
