@@ -2,16 +2,14 @@ import numpy as np
 import sys
 
 def fibonacci_custom_eigen(a, b, n):
-    # Define the Fibonacci transformation matrix, M
-    # This matrix transforms a vector representing consecutive Fibonacci terms
+    # Define the Fibonacci transformation matrix, M - This matrix transforms a vector representing consecutive Fibonacci terms 
     # to the next terms in the sequence.
     M = np.array([[1, 1],
                   [1, 0]])
 
     # Calculate eigenvalues and eigenvectors of the matrix M
-    # The eigenvalues (alpha and beta) of M are the roots of its characteristic polynomial,
-    # which relate to the golden ratio. These values help us derive the closed-form formula
-    # for the Fibonacci sequence.
+    # The eigenvalues (alpha and beta) of M are the roots of its characteristic polynomial.
+    # These values help us derive the closed-form formula for the Fibonacci sequence.
     eigenvalues, eigenvectors = np.linalg.eig(M)
     
     # Extract the eigenvalues
