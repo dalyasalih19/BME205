@@ -7,8 +7,14 @@ from scipy.cluster.hierarchy import linkage
 import sys
 
 def create_symmetric_matrix(file_path):
-    # Load the dataset
+    # Load the dataset and check the column names
     data = pd.read_csv(file_path, sep='\t')
+    print("Columns in the dataset:", data.columns)
+
+    # Verify column names (adjust 'interaction_score' and other columns if necessary)
+    if 'protein1' not in data.columns or 'protein2' not in data.columns or 'interaction_score' not in data.columns:
+        print("Please ensure the file has columns 'protein1', 'protein2', and 'interaction_score'.")
+        return None, None
     
     # Get all unique protein names to build the symmetric matrix
     proteins = pd.concat([data['protein1'], data['protein2']]).unique()
@@ -65,9 +71,13 @@ if __name__ == "__main__":
 
     # Step 1: Load data and create symmetric interaction matrix
     interaction_matrix, proteins = create_symmetric_matrix(file_path)
+    if interaction_matrix is None or proteins is None:
+        print("Error creating the interaction matrix. Check the file format and column names.")
+    else:
+        # Step 2: Apply NMF and filter proteins by the cluster with the fewest proteins
+        selected_matrix, selected_proteins = apply_nmf_and_cluster(interaction_matrix, proteins)
 
-    # Step 2: Apply NMF and filter proteins by the cluster with the fewest proteins
-    selected_matrix, selected_proteins = apply_nmf_and_cluster(interaction_matrix, proteins)
+        # Step 3: Plot and save the heatmap with hierarchical clustering
+        plot_heatmap(selected_matrix, selected_proteins)
 
-    # Step 3: Plot and save the heatmap with hierarchical clustering
-    plot_heatmap(selected_matrix, selected_proteins)
+
