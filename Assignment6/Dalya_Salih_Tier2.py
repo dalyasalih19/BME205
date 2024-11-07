@@ -7,13 +7,12 @@ from scipy.cluster.hierarchy import linkage
 import sys
 
 def create_symmetric_matrix(file_path):
-    # Load the dataset and check the column names
+    # Load the dataset
     data = pd.read_csv(file_path, sep='\t')
-    print("Columns in the dataset:", data.columns)
 
-    # Verify column names (adjust 'interaction_score' and other columns if necessary)
-    if 'protein1' not in data.columns or 'protein2' not in data.columns or 'interaction_score' not in data.columns:
-        print("Please ensure the file has columns 'protein1', 'protein2', and 'interaction_score'.")
+    # Ensure the correct columns are present
+    if 'protein1' not in data.columns or 'protein2' not in data.columns or 'combined_score' not in data.columns:
+        print("The file must contain 'protein1', 'protein2', and 'combined_score' columns.")
         return None, None
     
     # Get all unique protein names to build the symmetric matrix
@@ -27,7 +26,7 @@ def create_symmetric_matrix(file_path):
     # Fill in the matrix with interaction scores
     for _, row in data.iterrows():
         i, j = protein_to_idx[row['protein1']], protein_to_idx[row['protein2']]
-        score = row['interaction_score']
+        score = row['combined_score']
         interaction_matrix[i, j] = score
         interaction_matrix[j, i] = score  # Make it symmetric
 
@@ -79,5 +78,6 @@ if __name__ == "__main__":
 
         # Step 3: Plot and save the heatmap with hierarchical clustering
         plot_heatmap(selected_matrix, selected_proteins)
+
 
 
