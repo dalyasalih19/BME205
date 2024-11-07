@@ -21,7 +21,7 @@ def apply_nmf(dog_X_path, dog_clades_path):
     dominant_proportions = W_normalized.max(axis=1)
 
     # Sort indices based on dominant cluster and proportion for plotting
-    sorted_indices = np.lexsort((dominant_proportions, dominant_clusters))
+    sorted_indices = np.lexsort((-dominant_proportions, dominant_clusters))
     W_sorted = W_normalized[sorted_indices]
 
     # Create a stacked plot for the proportions of each component
