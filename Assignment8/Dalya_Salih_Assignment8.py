@@ -18,7 +18,7 @@ X = train_data.drop(columns=['breast_cancer', 'id'])  # Drop target and ID
 y = train_data['breast_cancer']                      # Target variable
 
 # Identify categorical and numerical columns
-categorical_cols = ['ancestry']
+categorical_cols = ['predicted_ancestry']
 numerical_cols = [col for col in X.columns if col not in categorical_cols]
 
 # Preprocess the data
