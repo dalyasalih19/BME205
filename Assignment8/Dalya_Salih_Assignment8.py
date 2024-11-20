@@ -5,8 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # Load the datasets
-train_file_path = 'train.csv'  # Replace with the actual path to train.csv
-test_file_path = 'test.csv'    # Replace with the actual path to test.csv
+train_file_path = 'train.csv'
+test_file_path = 'test.csv'
 
 # Load data
 train_data = pd.read_csv(train_file_path)
