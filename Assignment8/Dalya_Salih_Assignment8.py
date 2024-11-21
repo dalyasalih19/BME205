@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.feature_selection import VarianceThreshold
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_auc_score
@@ -30,27 +31,37 @@ preprocessor = ColumnTransformer(
 
 X_preprocessed = preprocessor.fit_transform(X)
 
+# Reduce dimensionality using Variance Threshold
+selector = VarianceThreshold(threshold=0.05)  # Stricter feature reduction
+X_reduced = selector.fit_transform(X_preprocessed)
+
 # Split into train and validation sets
-X_train, X_val, y_train, y_val = train_test_split(X_preprocessed, y, test_size=0.2, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X_reduced, y, test_size=0.2, random_state=42)
+
+# Take a subset of the training data for faster experimentation
+X_train_sample, _, y_train_sample, _ = train_test_split(
+    X_train, y_train, train_size=0.5, random_state=42
+)
 
 # Define logistic regression model
-log_reg = LogisticRegression(max_iter=1000, solver='saga', random_state=42)
+log_reg = LogisticRegression(penalty='elasticnet', solver='liblinear', max_iter=1000, random_state=42)
 
-# Set up GridSearchCV for hyperparameter tuning
+# Set up GridSearchCV with a reduced parameter grid
 param_grid = {
-    'C': [0.01, 0.1, 1, 10],         # Regularization strengths
-    'l1_ratio': [0.2, 0.5, 0.8]      # ElasticNet mixing parameters
+    'C': [0.1, 1],           # Smaller range
+    'l1_ratio': [0.5]        # Single ElasticNet mixing parameter
 }
 grid_search = GridSearchCV(
     estimator=log_reg,
     param_grid=param_grid,
     scoring='roc_auc',  # Optimize AUC-ROC
-    cv=5,               # 5-fold cross-validation
-    verbose=1
+    cv=3,               # Reduced cross-validation folds
+    verbose=1,
+    n_jobs=-1           # Parallelize across all CPU cores
 )
 
 # Run grid search
-grid_search.fit(X_train, y_train)
+grid_search.fit(X_train_sample, y_train_sample)
 
 # Get the best parameters and model
 best_log_reg = grid_search.best_estimator_
@@ -64,7 +75,8 @@ print(f"Optimized Logistic Regression Validation AUC: {auc:.4f}")
 # Preprocess the test set and predict probabilities
 X_test = test_data.drop(columns=['id'])
 X_test_preprocessed = preprocessor.transform(X_test)
-test_pred_prob = best_log_reg.predict_proba(X_test_preprocessed)[:, 1]
+X_test_reduced = selector.transform(X_test_preprocessed)  # Apply the same selector
+test_pred_prob = best_log_reg.predict_proba(X_test_reduced)[:, 1]
 
 # Prepare submission file
 submission = pd.DataFrame({'id': test_data['id'], 'breast_cancer': test_pred_prob})
