@@ -37,7 +37,7 @@ X_train, X_val, y_train, y_val = train_test_split(
 )
 
 # Train logistic regression with tuned regularization
-log_reg = LogisticRegression(max_iter=1000, C=0.5, random_state=42)  # Adjusted C
+log_reg = LogisticRegression(max_iter=500000, C=0.001, random_state=42)  # Adjusted C
 log_reg.fit(X_train, y_train)
 
 # Predict probabilities on validation set
