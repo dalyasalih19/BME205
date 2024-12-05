@@ -1,123 +1,133 @@
-import numpy as np
+# Filename: Dalya_Salih_Tier1.py
+
 import sys
+import numpy as np
 
-def read_vcf(vcf_file):
-    """Read a VCF file and extract relevant fields."""
-    samples = []
+# Constants
+INBRED_TO_OUTBRED = 1 / (1.5 * 10**6)
+OUTBRED_TO_INBRED = 1 / (4 * 10**6)
+ERROR_RATE = 1 / 1000  # Sequencing error rate
+DEFAULT_ALLELE_FREQ = 0.5  # Assumed reference allele frequency
+
+def parse_vcf(vcf_file):
+    """Parse a VCF file and extract positions, genotypes, and individuals."""
     positions = []
-    genotypes = {}
+    genotypes = []
+    individuals = []
+    
+    with open(vcf_file, 'r') as f:
+        for line in f:
+            if line.startswith("#CHROM"):  # Header line with individual names
+                header = line.strip().split('\t')
+                individuals = header[9:]  # Extract individual names from the VCF header
+            elif not line.startswith("#"):
+                fields = line.strip().split('\t')
+                positions.append(int(fields[1]))  # Position of the variant
+                genotypes.append(fields[9:])  # Genotypes for all individuals at this position
 
-    try:
-        with open(vcf_file, 'r') as f:
-            for line in f:
-                if line.startswith("#CHROM"):
-                    header = line.strip().split('\t')
-                    samples = header[9:]  # Extract sample names
-                    for sample in samples:
-                        genotypes[sample] = []
-                elif not line.startswith("#"):
-                    fields = line.strip().split('\t')
-                    pos = int(fields[1])  # Extract genomic position
-                    genotype_fields = fields[9:]
-                    positions.append(pos)
-                    for sample, genotype in zip(samples, genotype_fields):
-                        gt = genotype.split(':')[0]  # Extract genotype (e.g., 0|0, 1|1, 0|1)
-                        genotypes[sample].append(gt)
-    except FileNotFoundError:
-        print(f"Error: File '{vcf_file}' not found.", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error reading VCF file: {e}", file=sys.stderr)
-        sys.exit(1)
+    return np.array(positions), np.array(genotypes), individuals
 
-    return positions, genotypes
+def calculate_emission_probs(genotype, p):
+    """Calculate emission probabilities for inbred and outbred states."""
+    q = 1 - p
+    genotype = genotype.replace('|', '/')  # Treat phased genotypes as unphased
+    if genotype in {'0/0', '1/1'}:  # Homozygous
+        inbred_prob = 1 - ERROR_RATE
+        outbred_prob = 1 - 2 * p * q
+    elif genotype in {'0/1', '1/0'}:  # Heterozygous
+        inbred_prob = ERROR_RATE
+        outbred_prob = 2 * p * q
+    else:
+        raise ValueError(f"Unexpected genotype format: {genotype}")
+    
+    return inbred_prob, outbred_prob
 
+def viterbi(positions, genotypes, transition_probs, p):
+    """Perform the Viterbi algorithm to find the most likely sequence of inbred states."""
+    n_positions = len(positions)
+    n_states = 2  # 0: Inbred, 1: Outbred
+    log_probs = np.full((n_positions, n_states), -np.inf)
+    backpointers = np.zeros((n_positions, n_states), dtype=int)
+    
+    # Transition matrix in log space
+    trans_matrix = np.array([
+        [1 - transition_probs['inbred_to_outbred'], transition_probs['inbred_to_outbred']],
+        [transition_probs['outbred_to_inbred'], 1 - transition_probs['outbred_to_inbred']]
+    ])
+    log_trans_matrix = np.log(trans_matrix)
+    
+    # Initialization
+    for state in range(n_states):
+        emission_probs = calculate_emission_probs(genotypes[0], p)
+        log_probs[0, state] = np.log(emission_probs[state])
+    
+    # Forward pass
+    for i in range(1, n_positions):
+        for state in range(n_states):
+            max_prob, max_state = max(
+                (log_probs[i-1, prev_state] + log_trans_matrix[prev_state, state], prev_state)
+                for prev_state in range(n_states)
+            )
+            emission_probs = calculate_emission_probs(genotypes[i], p)
+            log_probs[i, state] = max_prob + np.log(emission_probs[state])
+            backpointers[i, state] = max_state
+    
+    # Traceback
+    states = np.zeros(n_positions, dtype=int)
+    states[-1] = np.argmax(log_probs[-1])
+    for i in range(n_positions - 2, -1, -1):
+        states[i] = backpointers[i + 1, states[i + 1]]
+    
+    return states
 
-def viterbi(positions, genotypes, p_ref, error_rate=1 / 1000):
-    """Perform Viterbi decoding to identify inbred regions."""
-    q_alt = 1 - p_ref
-    emission_inbred = {"0|0": 1 - error_rate, "1|1": 1 - error_rate, "0|1": error_rate}
-    emission_outbred = {"0|0": 1 - 2 * p_ref * q_alt, "1|1": 1 - 2 * p_ref * q_alt, "0|1": 2 * p_ref * q_alt}
-
-    # Fixed transition probabilities
-    transition_inbred_to_outbred = 1 / (1.5 * 10**6)
-    transition_outbred_to_inbred = 1 / (4 * 10**6)
-    transition_inbred_to_inbred = 1 - transition_inbred_to_outbred
-    transition_outbred_to_outbred = 1 - transition_outbred_to_inbred
-
-    results = {}
-
-    for sample, genotype_list in genotypes.items():
-        n = len(positions)
-        dp = np.full((2, n), -np.inf)  # 0: inbred, 1: outbred
-        traceback = np.zeros((2, n), dtype=int)
-
-        # Initialization
-        if genotype_list[0] in emission_inbred and genotype_list[0] in emission_outbred:
-            dp[0, 0] = np.log(emission_inbred[genotype_list[0]])
-            dp[1, 0] = np.log(emission_outbred[genotype_list[0]])
-
-        # Viterbi algorithm
-        for i in range(1, n):
-            if genotype_list[i] not in emission_inbred or genotype_list[i] not in emission_outbred:
-                continue  # Skip invalid genotypes
-
-            for state in range(2):
-                if state == 0:  # Inbred
-                    trans_probs = [
-                        dp[0, i - 1] + np.log(transition_inbred_to_inbred),
-                        dp[1, i - 1] + np.log(transition_outbred_to_inbred),
-                    ]
-                    emission_prob = np.log(emission_inbred[genotype_list[i]])
-                else:  # Outbred
-                    trans_probs = [
-                        dp[0, i - 1] + np.log(transition_inbred_to_outbred),
-                        dp[1, i - 1] + np.log(transition_outbred_to_outbred),
-                    ]
-                    emission_prob = np.log(emission_outbred[genotype_list[i]])
-
-                dp[state, i] = max(trans_probs) + emission_prob
-                traceback[state, i] = np.argmax(trans_probs)
-
-        # Traceback to find inbred regions
-        current_state = np.argmax(dp[:, -1])
-        inbred_regions = []
-        end = None
-
-        for i in range(n - 1, -1, -1):
-            if current_state == 0:  # Inbred
-                if end is None:
-                    end = positions[i]
+def find_inbred_regions(positions, states):
+    """Identify inbred regions from the Viterbi states."""
+    regions = []
+    start = None
+    for i, state in enumerate(states):
+        if state == 0:  # Inbred state
+            if start is None:
                 start = positions[i]
-                if i == 0 or traceback[current_state, i] != 0:
-                    inbred_regions.append((start, end))
-                    end = None
-            current_state = traceback[current_state, i]
+        elif state == 1 and start is not None:
+            regions.append((start, positions[i - 1]))
+            start = None
+    if start is not None:
+        regions.append((start, positions[-1]))
+    return regions
 
-        results[sample] = sorted(inbred_regions)
+def sort_key(result):
+    """Sort key function for ordering by individual and start position."""
+    name, start, stop = result
+    numeric_part = int(''.join(filter(str.isdigit, name)) or 0)
+    return (numeric_part, start)
 
-    return results
-
-
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: python FirstName_LastName_Tier1.py input.vcf", file=sys.stderr)
-        return
-
-    vcf_file = sys.argv[1]
-    positions, genotypes = read_vcf(vcf_file)
-
-    # Use a fixed reference allele frequency (e.g., 0.5)
-    p_ref = 0.5
-    results = viterbi(positions, genotypes, p_ref)
-
-    # Print the output in the required tab-delimited format
+def main(vcf_file):
+    positions, genotypes, individuals = parse_vcf(vcf_file)
+    transition_probs = {
+        'inbred_to_outbred': INBRED_TO_OUTBRED,
+        'outbred_to_inbred': OUTBRED_TO_INBRED
+    }
+    p = DEFAULT_ALLELE_FREQ  # Assume equal reference/alternative frequencies for now
+    
+    results = []
+    for i, individual in enumerate(individuals):
+        individual_genotypes = genotypes[:, i]
+        states = viterbi(positions, individual_genotypes, transition_probs, p)
+        regions = find_inbred_regions(positions, states)
+        for start, end in regions:
+            results.append((individual, start, end))
+    
+    # Sort results by individual name and start position
+    results.sort(key=sort_key)
+    
+    # Output results in the specified format
     print("individual\tstart_position\tstop_position")
-    for sample in sorted(results.keys()):  # Sort individuals alphabetically
-        regions = sorted(results[sample])  # Sort regions by start position
-        for start, stop in regions:
-            print(f"{sample}\t{start}\t{stop}")
-
+    for individual, start, stop in results:
+        print(f"{individual}\t{start}\t{stop}")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Usage: python Dalya_Salih_Tier1.py synthetic_population.vcf")
+        sys.exit(1)
+    main(sys.argv[1])
+
