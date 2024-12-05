@@ -39,7 +39,7 @@ def viterbi(positions, genotypes, p_ref, error_rate=1 / 1000):
     emission_inbred = {"0|0": 1 - error_rate, "1|1": 1 - error_rate, "0|1": error_rate}
     emission_outbred = {"0|0": 1 - 2 * p_ref * q_alt, "1|1": 1 - 2 * p_ref * q_alt, "0|1": 2 * p_ref * q_alt}
 
-    # Fixed transition probabilities as specified in the assignment
+    # Fixed transition probabilities
     transition_inbred_to_outbred = 1 / (1.5 * 10**6)
     transition_outbred_to_inbred = 1 / (4 * 10**6)
     transition_inbred_to_inbred = 1 - transition_inbred_to_outbred
@@ -49,22 +49,20 @@ def viterbi(positions, genotypes, p_ref, error_rate=1 / 1000):
 
     for sample, genotype_list in genotypes.items():
         n = len(positions)
-        dp = np.zeros((2, n))  # 0: inbred, 1: outbred
+        dp = np.full((2, n), -np.inf)  # 0: inbred, 1: outbred
         traceback = np.zeros((2, n), dtype=int)
 
-        # Initialization step
+        # Initialization
         if genotype_list[0] in emission_inbred and genotype_list[0] in emission_outbred:
             dp[0, 0] = np.log(emission_inbred[genotype_list[0]])
             dp[1, 0] = np.log(emission_outbred[genotype_list[0]])
-        else:
-            continue  # Skip invalid genotypes
 
         # Viterbi algorithm
         for i in range(1, n):
-            for state in range(2):
-                if genotype_list[i] not in emission_inbred or genotype_list[i] not in emission_outbred:
-                    continue
+            if genotype_list[i] not in emission_inbred or genotype_list[i] not in emission_outbred:
+                continue  # Skip invalid genotypes
 
+            for state in range(2):
                 if state == 0:  # Inbred
                     trans_probs = [
                         dp[0, i - 1] + np.log(transition_inbred_to_inbred),
@@ -84,18 +82,18 @@ def viterbi(positions, genotypes, p_ref, error_rate=1 / 1000):
         # Traceback to find inbred regions
         current_state = np.argmax(dp[:, -1])
         inbred_regions = []
-        end = positions[-1]
+        end = None
 
         for i in range(n - 1, -1, -1):
             if current_state == 0:  # Inbred
+                if end is None:
+                    end = positions[i]
                 start = positions[i]
                 if i == 0 or traceback[current_state, i] != 0:
                     inbred_regions.append((start, end))
-                    end = positions[i - 1] if i > 0 else start
-
+                    end = None
             current_state = traceback[current_state, i]
 
-        # Ensure regions are sorted by start position
         results[sample] = sorted(inbred_regions)
 
     return results
@@ -109,7 +107,7 @@ def main():
     vcf_file = sys.argv[1]
     positions, genotypes = read_vcf(vcf_file)
 
-    # Use a fixed reference allele frequency (e.g., 0.5) as specified
+    # Use a fixed reference allele frequency (e.g., 0.5)
     p_ref = 0.5
     results = viterbi(positions, genotypes, p_ref)
 
