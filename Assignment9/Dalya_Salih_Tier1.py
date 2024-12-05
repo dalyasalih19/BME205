@@ -7,12 +7,13 @@ import numpy as np
 INBRED_TO_OUTBRED = 1 / (1.5 * 10**6)
 OUTBRED_TO_INBRED = 1 / (4 * 10**6)
 ERROR_RATE = 1 / 1000  # Sequencing error rate
-DEFAULT_ALLELE_FREQ = 0.5  # Assumed reference allele frequency
+DEFAULT_ALLELE_FREQ = 0.5  # Assumed reference allele frequency if not provided in INFO field
 
 def parse_vcf(vcf_file):
-    """Parse a VCF file and extract positions, genotypes, and individuals."""
+    """Parse a VCF file and extract positions, genotypes, individuals, and allele frequencies."""
     positions = []
     genotypes = []
+    allele_frequencies = []  # To store `p` values
     individuals = []
     
     with open(vcf_file, 'r') as f:
@@ -25,7 +26,13 @@ def parse_vcf(vcf_file):
                 positions.append(int(fields[1]))  # Position of the variant
                 genotypes.append(fields[9:])  # Genotypes for all individuals at this position
 
-    return np.array(positions), np.array(genotypes), individuals
+                # Extract allele frequency (p) from INFO field if available
+                info_field = fields[7]
+                af_field = next((item.split('=')[1] for item in info_field.split(';') if item.startswith("AF=")), None)
+                p = float(af_field) if af_field else DEFAULT_ALLELE_FREQ
+                allele_frequencies.append(p)
+
+    return np.array(positions), np.array(genotypes), np.array(allele_frequencies), individuals
 
 def calculate_emission_probs(genotype, p):
     """Calculate emission probabilities for inbred and outbred states."""
@@ -42,7 +49,7 @@ def calculate_emission_probs(genotype, p):
     
     return inbred_prob, outbred_prob
 
-def viterbi(positions, genotypes, transition_probs, p):
+def viterbi(positions, genotypes, allele_frequencies, transition_probs):
     """Perform the Viterbi algorithm to find the most likely sequence of inbred states."""
     n_positions = len(positions)
     n_states = 2  # 0: Inbred, 1: Outbred
@@ -58,7 +65,7 @@ def viterbi(positions, genotypes, transition_probs, p):
     
     # Initialization
     for state in range(n_states):
-        emission_probs = calculate_emission_probs(genotypes[0], p)
+        emission_probs = calculate_emission_probs(genotypes[0], allele_frequencies[0])
         log_probs[0, state] = np.log(emission_probs[state])
     
     # Forward pass
@@ -68,7 +75,7 @@ def viterbi(positions, genotypes, transition_probs, p):
                 (log_probs[i-1, prev_state] + log_trans_matrix[prev_state, state], prev_state)
                 for prev_state in range(n_states)
             )
-            emission_probs = calculate_emission_probs(genotypes[i], p)
+            emission_probs = calculate_emission_probs(genotypes[i], allele_frequencies[i])
             log_probs[i, state] = max_prob + np.log(emission_probs[state])
             backpointers[i, state] = max_state
     
@@ -102,17 +109,16 @@ def sort_key(result):
     return (numeric_part, start)
 
 def main(vcf_file):
-    positions, genotypes, individuals = parse_vcf(vcf_file)
+    positions, genotypes, allele_frequencies, individuals = parse_vcf(vcf_file)
     transition_probs = {
         'inbred_to_outbred': INBRED_TO_OUTBRED,
         'outbred_to_inbred': OUTBRED_TO_INBRED
     }
-    p = DEFAULT_ALLELE_FREQ  # Assume equal reference/alternative frequencies for now
     
     results = []
     for i, individual in enumerate(individuals):
         individual_genotypes = genotypes[:, i]
-        states = viterbi(positions, individual_genotypes, transition_probs, p)
+        states = viterbi(positions, individual_genotypes, allele_frequencies, transition_probs)
         regions = find_inbred_regions(positions, states)
         for start, end in regions:
             results.append((individual, start, end))
@@ -130,4 +136,3 @@ if __name__ == "__main__":
         print("Usage: python Dalya_Salih_Tier1.py synthetic_population.vcf")
         sys.exit(1)
     main(sys.argv[1])
-
