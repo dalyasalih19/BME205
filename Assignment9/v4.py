@@ -1,3 +1,5 @@
+# Filename: FirstName_LastName_Tier1.py
+
 import sys
 import numpy as np
 
@@ -93,6 +95,12 @@ def find_inbred_regions(positions, states):
         regions.append((start, positions[-1]))
     return regions
 
+def sort_key(result):
+    """Sort key function for ordering by individual and start position."""
+    name, start, stop = result
+    numeric_part = int(''.join(filter(str.isdigit, name)) or 0)
+    return (numeric_part, start)
+
 def main(vcf_file):
     positions, genotypes, individuals = parse_vcf(vcf_file)
     transition_probs = {
@@ -109,8 +117,10 @@ def main(vcf_file):
         for start, end in regions:
             results.append((individual, start, end))
     
-    # Sort and output
-    results.sort(key=lambda x: (x[0], x[1]))
+    # Sort results by individual name and start position
+    results.sort(key=sort_key)
+    
+    # Output results in the specified format
     print("individual\tstart_position\tstop_position")
     for individual, start, stop in results:
         print(f"{individual}\t{start}\t{stop}")
@@ -120,3 +130,4 @@ if __name__ == "__main__":
         print("Usage: python FirstName_LastName_Tier1.py input.vcf")
         sys.exit(1)
     main(sys.argv[1])
+
