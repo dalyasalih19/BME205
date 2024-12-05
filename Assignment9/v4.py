@@ -1,5 +1,3 @@
-# Filename: FirstName_LastName_Tier1.py
-
 import sys
 import numpy as np
 
